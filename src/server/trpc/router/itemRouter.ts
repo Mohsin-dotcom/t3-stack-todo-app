@@ -39,5 +39,27 @@ export const itemRouter = router({
           id,
         }
       })
+    }),
+
+  completedTodo: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        checked: z.boolean(),
+      })
+    )
+    .mutation(({ input, ctx }) => {
+      const { id, checked } = input;
+      const item = ctx.prisma.todoList.update({
+        where: {
+          id,
+        },
+        data: {
+          checked,
+        },
+      })
+
+      return item
     })
+
 });

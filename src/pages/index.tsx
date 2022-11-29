@@ -5,18 +5,24 @@ import { useState } from "react";
 import Modal from "../components/Modal";
 
 import { trpc } from '../utils/trpc';
+import { motion } from 'framer-motion'
 
 const Home: NextPage = () => {
   const [itemsList, setItemsList] = useState<todoList[]>([]);
-  const [showModal, setShowModal] = useState<boolean>(false)
+  const [checkedItems, setCheckedItems] = useState<todoList[]>([])
+  const [showModal, setShowModal] = useState<boolean>(false);
 
   const { data: todoList, isLoading } = trpc.item.getAllTodos.useQuery(['getAllTodos'], {
     onSuccess(data) {
-      setItemsList(data)
+      setItemsList(data);
+      const checked = data.filter((item) => item.checked)
+      setCheckedItems(checked);
     },
   });
 
   const deleteMutation = trpc.item.deleteTodo.useMutation();
+
+  const completeTodoMutation = trpc.item.completedTodo.useMutation();
 
   const deleteTodo = (id: string) => {
     deleteMutation.mutate({ id }, {
@@ -25,6 +31,21 @@ const Home: NextPage = () => {
       }
     });
   };
+
+  const handleTodoCompletion = (id: string, checked: boolean) => {
+    completeTodoMutation.mutate({ id, checked }, {
+      onSuccess(todoItem) {
+        // check if this item is already checked
+        if (checkedItems.some((item) => item.id === todoItem.id)) {
+          // remove it from the checked items
+          setCheckedItems((prev) => prev.filter((item) => item.id !== todoItem.id))
+        } else {
+          // add it to the checked items
+          setCheckedItems((prev) => [...prev, todoItem])
+        }
+      },
+    })
+  }
 
   if (isLoading || !todoList) return <p>Loading Todos...</p>
 
@@ -49,14 +70,31 @@ const Home: NextPage = () => {
 
         <ul className="mt-4">
           {itemsList?.map((item, index) => (
-            <li key={index} className="flex justify-between items-center mt-4">
-              <span>{item.name}</span>
+            <li key={index} className="flex justify-between items-center mt-4 w-full">
+              <div className="relative">
+              <div className='pointer-events-none absolute inset-0 flex origin-left items-center justify-center'>
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: checkedItems.some((checkedItem) => checkedItem.id === item.id) ? '100%' : 0 }}
+                  transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  className='h-[2px] w-full translate-y-px bg-red-500'
+                />
+              </div>
+              <span
+                onClick={() =>
+                  handleTodoCompletion(item.id,
+                    checkedItems.some((item) => item.id === item.id) ? false : true)}
+              >
+                {item.name}
+              </span>
+              </div>
               <button
                 type="button"
                 onClick={() => deleteTodo(item.id)}
                 className="bg-red-500 hover:bg-red-700 text-white text-sm p-2 cursor-pointer px-4 rounded"
               >
-                Delete</button>
+                Delete
+              </button>
             </li>
           ))}
         </ul>
