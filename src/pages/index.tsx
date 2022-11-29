@@ -10,14 +10,24 @@ const Home: NextPage = () => {
   const [itemsList, setItemsList] = useState<todoList[]>([]);
   const [showModal, setShowModal] = useState<boolean>(false)
 
-  const {data: todoList, isLoading} = trpc.item.getAllTodos.useQuery(['getAllTodos'], {
-    onSuccess(data) {      
+  const { data: todoList, isLoading } = trpc.item.getAllTodos.useQuery(['getAllTodos'], {
+    onSuccess(data) {
       setItemsList(data)
     },
   });
 
+  const deleteMutation = trpc.item.deleteTodo.useMutation();
+
+  const deleteTodo = (id: string) => {
+    deleteMutation.mutate({ id }, {
+      onSuccess(todo) {
+        setItemsList((prev) => prev.filter((item) => item.id !== todo.id))
+      }
+    });
+  };
+
   if (isLoading || !todoList) return <p>Loading Todos...</p>
-  
+
   return (
     <>
       <Head>
@@ -39,8 +49,14 @@ const Home: NextPage = () => {
 
         <ul className="mt-4">
           {itemsList?.map((item, index) => (
-            <li key={index} className="flex justify-between items-center">
+            <li key={index} className="flex justify-between items-center mt-4">
               <span>{item.name}</span>
+              <button
+                type="button"
+                onClick={() => deleteTodo(item.id)}
+                className="bg-red-500 hover:bg-red-700 text-white text-sm p-2 cursor-pointer px-4 rounded"
+              >
+                Delete</button>
             </li>
           ))}
         </ul>

@@ -25,4 +25,19 @@ export const itemRouter = router({
   getAllTodos: publicProcedure.query(({ ctx }) => {
     return ctx.prisma.todoList.findMany();
   }),
+
+  deleteTodo: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      })
+    )
+    .mutation(({ input, ctx }) => {
+      const { id } = input;
+      return ctx.prisma.todoList.delete({
+        where: {
+          id,
+        }
+      })
+    })
 });
