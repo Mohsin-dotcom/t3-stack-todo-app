@@ -1,4 +1,3 @@
-import { todoList } from "@prisma/client";
 import { type NextPage } from "next";
 import Head from "next/head";
 import { useState } from "react";
@@ -7,16 +6,9 @@ import Modal from "../components/Modal";
 import { trpc } from '../utils/trpc';
 
 const Home: NextPage = () => {
-  const [itemsList, setItemsList] = useState<todoList[]>([]);
   const [showModal, setShowModal] = useState<boolean>(false)
 
-  const mutation = trpc.item.addItem.useMutation({
-    onSuccess: (item) => {
-      setItemsList((prev) => [...prev, item])
-    }
-  });
-
-  console.log('mutation', mutation);
+  const {data: todoList} = trpc.item.getAll.useQuery();
 
   return (
     <>
@@ -38,9 +30,9 @@ const Home: NextPage = () => {
         </div>
 
         <ul className="mt-4">
-          {[1, 2]?.map((item, index) => (
+          {todoList?.map((item, index) => (
             <li key={index} className="flex justify-between items-center">
-              <span>{item}</span>
+              <span>{item.name}</span>
             </li>
           ))}
         </ul>
