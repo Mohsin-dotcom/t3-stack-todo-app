@@ -1,11 +1,19 @@
+import { todoList } from "@prisma/client";
 import { type NextPage } from "next";
 import Head from "next/head";
-import Link from "next/link";
+import { useState } from "react";
 
-import { trpc } from "../utils/trpc";
+import { trpc } from '../utils/trpc';
 
 const Home: NextPage = () => {
-  const hello = trpc.example.hello.useQuery({ text: "from tRPC" });
+  const [itemsList, setItemsList] = useState<todoList[]>([])
+  const mutation = trpc.item.addItem.useMutation({
+    onSuccess: (item) => {
+      setItemsList((prev) => [...prev, item])
+    }
+  });
+
+  console.log('mutation', mutation);
 
   return (
     <>
@@ -16,9 +24,20 @@ const Home: NextPage = () => {
       </Head>
 
       <main className="mx-auto my-12 max-w-3xl">
-        <h2 className="text-2xl font-semibold"> My shopping list</h2>
+        <div className="flex justify-between">
+          <h2 className="text-2xl font-semibold"> My shopping list</h2>
+          <button type="button" className="bg-violet-500 text-sm text-white p-2 rounded-md transition hover:bg-violet-600 " >Add item</button>
+        </div>
+
+        <ul className="mt-4">
+          {[1,2]?.map((item, index) => (
+            <li key={index}  className="flex justify-between items-center">
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
       </main>
-     
+
     </>
   );
 };
