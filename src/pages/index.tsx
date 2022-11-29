@@ -1,3 +1,4 @@
+import { todoList } from "@prisma/client";
 import { type NextPage } from "next";
 import Head from "next/head";
 import { useState } from "react";
@@ -6,10 +7,16 @@ import Modal from "../components/Modal";
 import { trpc } from '../utils/trpc';
 
 const Home: NextPage = () => {
+  const [itemsList, setItemsList] = useState<todoList[]>([]);
   const [showModal, setShowModal] = useState<boolean>(false)
 
-  const {data: todoList} = trpc.item.getAllTodos.useQuery();
+  const {data: todoList, isLoading} = trpc.item.getAllTodos.useQuery(['getAllTodos'], {
+    onSuccess(data) {      
+      setItemsList(data)
+    },
+  });
 
+  
   return (
     <>
       <Head>
@@ -30,7 +37,7 @@ const Home: NextPage = () => {
         </div>
 
         <ul className="mt-4">
-          {todoList?.map((item, index) => (
+          {itemsList?.map((item, index) => (
             <li key={index} className="flex justify-between items-center">
               <span>{item.name}</span>
             </li>
@@ -38,7 +45,7 @@ const Home: NextPage = () => {
         </ul>
       </main>
 
-      {showModal && <Modal setShowModal={setShowModal} />}
+      {showModal && <Modal setShowModal={setShowModal} setItemsList={setItemsList} />}
     </>
   );
 };

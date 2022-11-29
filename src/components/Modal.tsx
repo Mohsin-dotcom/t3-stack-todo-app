@@ -1,11 +1,13 @@
+import { todoList } from '@prisma/client';
 import { Dispatch, FC, SetStateAction, useState } from 'react';
 import { trpc } from '../utils/trpc';
 
-interface ModalProps { 
+interface ModalProps {
   setShowModal: Dispatch<SetStateAction<boolean>>
+  setItemsList: Dispatch<SetStateAction<todoList[]>>
 }
 
-const Modal: FC<ModalProps> = ({ setShowModal}) => {
+const Modal: FC<ModalProps> = ({ setShowModal, setItemsList }) => {
 
   const [inputValue, setInputValue] = useState<string>('')
 
@@ -13,7 +15,11 @@ const Modal: FC<ModalProps> = ({ setShowModal}) => {
   const mutation = trpc.item.addItem.useMutation();
 
   const handleAddTodo = async () => {
-    mutation.mutate({name: inputValue });
+    mutation.mutate({ name: inputValue }, {
+      onSuccess(item) {
+        setItemsList((prev) => [...prev, item])
+      }
+    });
     setShowModal(false);
   };
 
