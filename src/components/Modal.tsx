@@ -17,10 +17,10 @@ const Modal: FC<ModalProps> = ({ setShowModal, setItemsList }) => {
   const handleAddTodo = async () => {
     mutation.mutate({ name: inputValue }, {
       onSuccess(item) {
-        setItemsList((prev) => [...prev, item])
+        setItemsList((prev) => [...prev, item]);
+        setShowModal(false);
       }
     });
-    setShowModal(false);
   };
 
   return (
@@ -46,9 +46,9 @@ const Modal: FC<ModalProps> = ({ setShowModal, setItemsList }) => {
             className='rounded-md bg-violet-500 p-1 text-xs text-white transition hover:bg-violet-600'>
             Add
           </button>
-        </div>
-      </div>
-    </div>
+        </div >
+      </div >
+    </div >
   )
 }
 

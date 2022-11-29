@@ -16,6 +16,7 @@ const Home: NextPage = () => {
     },
   });
 
+  if (isLoading || !todoList) return <p>Loading Todos...</p>
   
   return (
     <>
