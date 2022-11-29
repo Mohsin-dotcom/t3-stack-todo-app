@@ -22,7 +22,7 @@ export const itemRouter = router({
       return item
     }),
 
-  getAll: publicProcedure.query(({ ctx }) => {
+  getAllTodos: publicProcedure.query(({ ctx }) => {
     return ctx.prisma.todoList.findMany();
   }),
 });

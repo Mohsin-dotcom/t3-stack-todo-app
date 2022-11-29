@@ -8,7 +8,7 @@ import { trpc } from '../utils/trpc';
 const Home: NextPage = () => {
   const [showModal, setShowModal] = useState<boolean>(false)
 
-  const {data: todoList} = trpc.item.getAll.useQuery();
+  const {data: todoList} = trpc.item.getAllTodos.useQuery();
 
   return (
     <>
