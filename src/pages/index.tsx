@@ -2,11 +2,14 @@ import { todoList } from "@prisma/client";
 import { type NextPage } from "next";
 import Head from "next/head";
 import { useState } from "react";
+import Modal from "../components/Modal";
 
 import { trpc } from '../utils/trpc';
 
 const Home: NextPage = () => {
-  const [itemsList, setItemsList] = useState<todoList[]>([])
+  const [itemsList, setItemsList] = useState<todoList[]>([]);
+  const [showModal, setShowModal] = useState<boolean>(false)
+
   const mutation = trpc.item.addItem.useMutation({
     onSuccess: (item) => {
       setItemsList((prev) => [...prev, item])
@@ -23,21 +26,27 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
+
       <main className="mx-auto my-12 max-w-3xl">
         <div className="flex justify-between">
           <h2 className="text-2xl font-semibold"> My shopping list</h2>
-          <button type="button" className="bg-violet-500 text-sm text-white p-2 rounded-md transition hover:bg-violet-600 " >Add item</button>
+          <button
+            type="button"
+            onClick={() => setShowModal(true)}
+            className="bg-violet-500 text-sm text-white p-2 rounded-md transition hover:bg-violet-600 "
+          >Add item</button>
         </div>
 
         <ul className="mt-4">
-          {[1,2]?.map((item, index) => (
-            <li key={index}  className="flex justify-between items-center">
+          {[1, 2]?.map((item, index) => (
+            <li key={index} className="flex justify-between items-center">
               <span>{item}</span>
             </li>
           ))}
         </ul>
       </main>
 
+      {showModal && <Modal setShowModal={setShowModal} />}
     </>
   );
 };
