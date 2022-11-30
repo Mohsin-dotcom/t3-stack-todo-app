@@ -1,29 +1,41 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, FC } from "react";
 import { todoList } from "@prisma/client";
-import { type NextPage } from "next";
 import Head from "next/head";
 import Modal from "../components/Modal";
 
 import { trpc } from '../utils/trpc';
 import { motion } from 'framer-motion'
 
-const Home: NextPage = () => {
+import { createProxySSGHelpers } from '@trpc/react-query/ssg';
+import { createContext } from "../server/trpc/context";
+import { appRouter } from "../server/trpc/router/_app";
+
+import superjson from 'superjson';
+
+
+interface HomeProps {
+  trpcState: any
+}
+
+const Home: FC<HomeProps> = ({ trpcState }) => {
   const [itemsList, setItemsList] = useState<todoList[]>([]);
   const [checkedItems, setCheckedItems] = useState<todoList[]>([])
   const [showModal, setShowModal] = useState<boolean>(false);
 
   const { mutate: deleteMutation } = trpc.item.deleteTodo.useMutation();
   const { mutate: completeTodoMutation } = trpc.item.completedTodo.useMutation();
-  const { data: todoList, isLoading, isSuccess } = trpc.item.getAllTodos.useQuery();
+
+  // const { data: todoList, isLoading, isSuccess } = trpc.item.getAllTodos.useQuery();
+  const { data: todoList, status } = trpcState.json.queries[0].state;
 
   useEffect(() => {
-    if (isSuccess) {
+    if (status.toLowerCase() === 'success') {
       setItemsList(todoList);
       //getting completed todos
-      const checked = todoList.filter((item) => item.checked);
+      const checked = todoList.filter((item: any) => item.checked);
       setCheckedItems(checked);
     }
-  }, [isSuccess])
+  }, [status])
 
   const deleteTodo = (id: string) => {
     deleteMutation({ id }, {
@@ -48,7 +60,7 @@ const Home: NextPage = () => {
     })
   }
 
-  if (isLoading || !todoList) return <p>Loading Todos...</p>
+  if (!todoList) return <p>Loading Todos...</p>
 
   return (
     <>
@@ -68,7 +80,7 @@ const Home: NextPage = () => {
             className="bg-violet-500 text-sm text-white p-2 rounded-md transition hover:bg-violet-600 "
           >
             Add item
-            </button>
+          </button>
         </div>
 
         <ul className="mt-4">
@@ -80,7 +92,7 @@ const Home: NextPage = () => {
                     initial={{ width: 0 }}
                     animate={{ width: checkedItems.some((checkedItem) => checkedItem.id === item.id) ? '100%' : 0 }}
                     transition={{ duration: 0.2, ease: 'easeInOut' }}
-                    className='h-[2px] w-full translate-y-px bg-red-500'
+                    className='h-[2px] w-full translate-y-px bg-red-400'
                   />
                 </div>
                 <span
@@ -107,5 +119,22 @@ const Home: NextPage = () => {
     </>
   );
 };
+
+export async function getServerSideProps(context: any) {
+  const ssg = createProxySSGHelpers({
+    router: appRouter,
+    ctx: await createContext(context),
+    transformer: superjson,
+  });
+  /*
+   * `prefetch` does not return the result and never throws - if you need that behavior, use `fetch` instead.
+   */
+  await ssg.item.getAllTodos.prefetch();
+  return {
+    props: {
+      trpcState: ssg.dehydrate(),
+    },
+  };
+}
 
 export default Home;
