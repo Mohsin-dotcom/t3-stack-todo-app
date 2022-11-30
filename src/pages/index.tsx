@@ -1,7 +1,7 @@
+import { useEffect, useState } from "react";
 import { todoList } from "@prisma/client";
 import { type NextPage } from "next";
 import Head from "next/head";
-import { useState } from "react";
 import Modal from "../components/Modal";
 
 import { trpc } from '../utils/trpc';
@@ -12,17 +12,19 @@ const Home: NextPage = () => {
   const [checkedItems, setCheckedItems] = useState<todoList[]>([])
   const [showModal, setShowModal] = useState<boolean>(false);
 
-  const { data: todoList, isLoading } = trpc.item.getAllTodos.useQuery(['getAllTodos'], {
-    onSuccess(data) {
-      setItemsList(data);
-      const checked = data.filter((item) => item.checked)
-      setCheckedItems(checked);
-    },
-  });
+  const { data: todoList, isLoading, isSuccess } = trpc.item.getAllTodos.useQuery();
 
   const deleteMutation = trpc.item.deleteTodo.useMutation();
 
   const completeTodoMutation = trpc.item.completedTodo.useMutation();
+
+  useEffect(() => {
+    if (isSuccess) {
+      setItemsList(todoList);
+      const checked = todoList.filter((item) => item.checked)
+      setCheckedItems(checked);
+    }
+  }, [isSuccess])
 
   const deleteTodo = (id: string) => {
     deleteMutation.mutate({ id }, {
@@ -35,9 +37,9 @@ const Home: NextPage = () => {
   const handleTodoCompletion = (id: string, checked: boolean) => {
     completeTodoMutation.mutate({ id, checked }, {
       onSuccess(todoItem) {
-        // check if this item is already checked
+        // check if this todo is already completed
         if (checkedItems.some((item) => item.id === todoItem.id)) {
-          // remove it from the checked items
+          // remove it from the completed todos
           setCheckedItems((prev) => prev.filter((item) => item.id !== todoItem.id))
         } else {
           // add it to the checked items
@@ -72,21 +74,21 @@ const Home: NextPage = () => {
           {itemsList?.map((item, index) => (
             <li key={index} className="flex justify-between items-center mt-4 w-full">
               <div className="relative">
-              <div className='pointer-events-none absolute inset-0 flex origin-left items-center justify-center'>
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: checkedItems.some((checkedItem) => checkedItem.id === item.id) ? '100%' : 0 }}
-                  transition={{ duration: 0.2, ease: 'easeInOut' }}
-                  className='h-[2px] w-full translate-y-px bg-red-500'
-                />
-              </div>
-              <span
-                onClick={() =>
-                  handleTodoCompletion(item.id,
-                    checkedItems.some((item) => item.id === item.id) ? false : true)}
-              >
-                {item.name}
-              </span>
+                <div className='pointer-events-none absolute inset-0 flex origin-left items-center justify-center'>
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: checkedItems.some((checkedItem) => checkedItem.id === item.id) ? '100%' : 0 }}
+                    transition={{ duration: 0.2, ease: 'easeInOut' }}
+                    className='h-[2px] w-full translate-y-px bg-red-500'
+                  />
+                </div>
+                <span
+                  onClick={() =>
+                    handleTodoCompletion(item.id,
+                      checkedItems.some((checkedItem) => checkedItem.id === item.id) ? false : true)}
+                >
+                  {item.name}
+                </span>
               </div>
               <button
                 type="button"
