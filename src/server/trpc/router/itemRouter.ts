@@ -3,7 +3,9 @@ import { router } from "../trpc";
 import { z } from "zod";
 
 export const itemRouter = router({
-  addItem: publicProcedure
+
+  //Add todo
+  addTodo: publicProcedure
     // using zod schema to validate and infer input values
     .input(
       z.object({
@@ -22,10 +24,12 @@ export const itemRouter = router({
       return item
     }),
 
+    //get All todods
   getAllTodos: publicProcedure.query(({ ctx }) => {
     return ctx.prisma.todoList.findMany();
   }),
 
+  //delete todo by ID
   deleteTodo: publicProcedure
     .input(
       z.object({
@@ -41,6 +45,7 @@ export const itemRouter = router({
       })
     }),
 
+  //toggle todo
   completedTodo: publicProcedure
     .input(
       z.object({

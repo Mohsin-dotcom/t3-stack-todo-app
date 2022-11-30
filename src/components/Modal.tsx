@@ -11,8 +11,7 @@ const Modal: FC<ModalProps> = ({ setShowModal, setItemsList }) => {
 
   const [inputValue, setInputValue] = useState<string>('')
 
-  //https://trpc.io/docs/react-mutations
-  const mutation = trpc.item.addItem.useMutation();
+  const mutation = trpc.item.addTodo.useMutation();
 
   const handleAddTodo = async () => {
     mutation.mutate({ name: inputValue }, {
